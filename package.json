@@ -1,0 +1,22 @@
+{
+  "name": "sravya-portfolio",
+  "version": "1.0.0",
+  "description": "Professional portfolio for Amara Sravya",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm start",
+    "build": "cd frontend && npm run build",
+    "install-deps": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "heroku-postbuild": "cd frontend && npm install && npm run build",
+    "start": "cd backend && npm start",
+    "deploy": "npm run build && echo 'Build completed successfully!'"
+  },
+  "keywords": ["portfolio", "react", "nodejs", "express"],
+  "author": "Amara Sravya",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
