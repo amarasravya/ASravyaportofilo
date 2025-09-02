@@ -12,19 +12,22 @@ const contactLimiter = rateLimit({
   }
 });
 
-// Apply rate limiting to contact routes
-router.use(contactLimiter);
+// Apply rate limiting only to form submissions (POST)
+// Note: do not rate limit GET /info to avoid blocking read-only requests
 
 // Validation middleware
 const validateContactForm = (req, res, next) => {
-  const { name, email, subject, message } = req.body;
-  
+  const name = (req.body.name || '').trim();
+  const email = (req.body.email || '').trim();
+  const subject = (req.body.subject || '').trim();
+  const message = (req.body.message || '').trim();
+
   if (!name || !email || !subject || !message) {
     return res.status(400).json({
       error: 'All fields are required: name, email, subject, message'
     });
   }
-  
+
   // Basic email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
@@ -32,14 +35,20 @@ const validateContactForm = (req, res, next) => {
       error: 'Please provide a valid email address'
     });
   }
-  
-  // Length validation
+
+  // Length validation (post-trim)
   if (name.length > 100 || subject.length > 200 || message.length > 1000) {
     return res.status(400).json({
       error: 'Input length exceeds maximum allowed'
     });
   }
-  
+
+  // Attach sanitized values for downstream usage
+  req.body.name = name;
+  req.body.email = email;
+  req.body.subject = subject;
+  req.body.message = message;
+
   next();
 };
 
@@ -47,7 +56,7 @@ const validateContactForm = (req, res, next) => {
 const createTransporter = () => {
   // For development, you can use a service like Gmail
   // For production, use a proper email service like SendGrid, Mailgun, etc.
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER, // Your email
@@ -57,7 +66,7 @@ const createTransporter = () => {
 };
 
 // POST /api/contact - Handle contact form submission
-router.post('/', validateContactForm, async (req, res) => {
+router.post('/', contactLimiter, validateContactForm, async (req, res) => {
   try {
     const { name, email, subject, message } = req.body;
     
@@ -66,7 +75,8 @@ router.post('/', validateContactForm, async (req, res) => {
     
     // Email content
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: `${name} <${process.env.EMAIL_USER}>`,
+      replyTo: email,
       to: process.env.CONTACT_EMAIL || process.env.EMAIL_USER,
       subject: `Portfolio Contact: ${subject}`,
       html: `
@@ -100,19 +110,37 @@ router.post('/', validateContactForm, async (req, res) => {
       `
     };
     
-    // Send email
+    // Send email with robust dev fallback
+    let sent = false;
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      await transporter.sendMail(mailOptions);
+      try {
+        await transporter.sendMail(mailOptions);
+        sent = true;
+      } catch (err) {
+        console.error('Email send failed:', err);
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('Dev fallback: logging message and returning success.');
+          console.log(mailOptions.text);
+          sent = true;
+        } else {
+          return res.status(502).json({
+            error: 'Email service temporarily unavailable. Please try again later.'
+          });
+        }
+      }
     } else {
       // For development - just log the message
       console.log('Contact form submission (email not configured):');
       console.log(mailOptions.text);
+      sent = true;
     }
-    
-    res.status(200).json({
-      success: true,
-      message: 'Thank you for your message! I will get back to you soon.'
-    });
+
+    if (sent) {
+      return res.status(200).json({
+        success: true,
+        message: 'Thank you for your message! I will get back to you soon.'
+      });
+    }
     
   } catch (error) {
     console.error('Contact form error:', error);

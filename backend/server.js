@@ -9,10 +9,11 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(helmet());
+const allowedOrigin = process.env.FRONTEND_URL || (
+  process.env.NODE_ENV === 'production' ? 'https://your-portfolio-domain.com' : 'http://localhost:3000'
+);
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://your-portfolio-domain.com' 
-    : 'http://localhost:3000',
+  origin: allowedOrigin,
   credentials: true
 }));
 
@@ -46,8 +47,10 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
 
 module.exports = app;

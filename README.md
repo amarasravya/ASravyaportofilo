@@ -26,6 +26,7 @@ A modern, responsive portfolio website built with React.js frontend and Node.js/
 - **Node.js** - JavaScript runtime
 - **Express.js** - Web application framework
 - **Nodemailer** - Email sending functionality
+- **Mongoose** - MongoDB object modeling
 - **CORS** - Cross-origin resource sharing
 - **Helmet** - Security middleware
 - **Express Rate Limit** - Rate limiting middleware
@@ -95,14 +96,26 @@ sravya-portfolio/
    
    Edit the `.env` file with your configuration:
    ```env
-   PORT=5000
    NODE_ENV=development
+   PORT=5000
+   MONGO_URI=your_mongodb_connection_string
    EMAIL_USER=your-email@gmail.com
    EMAIL_PASS=your-app-password
    CONTACT_EMAIL=amarasravya@gmail.com
+   FRONTEND_URL=http://localhost:3000
    ```
+   - `MONGO_URI`: Your MongoDB connection string. You can get one for free from MongoDB Atlas.
 
-4. **Run the application**
+4. **Seed the Database (Crucial Step)**
+   To populate the application with the initial portfolio data, run the seeder script from the root directory.
+   ```bash
+   node backend/seeder
+   ```
+   This command reads the data from `backend/data/portfolioData.js` and inserts it into your MongoDB database.
+
+   > **Note:** If you ever update `portfolioData.js`, you must run this command again to see the changes.
+
+5. **Run the application**
    ```bash
    # From the root directory, run both frontend and backend
    npm run dev
@@ -150,12 +163,14 @@ To enable the contact form functionality:
 ## 🎨 Customization
 
 ### Updating Portfolio Data
-Edit the portfolio data in `backend/routes/portfolio.js` to reflect your own information:
-- Personal details
-- Education history
-- Work experience
-- Skills and technologies
-- Projects and achievements
+All portfolio content is managed through a central data file that seeds a MongoDB database.
+
+1.  **Edit the data file**: Open `backend/data/portfolioData.js` and modify the content to reflect your own information (personal details, projects, skills, etc.).
+2.  **Re-seed the database**: After saving your changes, run the seeder script again from the project root to update the database.
+    ```bash
+    node backend/seeder
+    ```
+Your website will now display the updated content.
 
 ### Styling
 - Global styles: `frontend/src/App.css`

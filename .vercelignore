@@ -1,0 +1,8 @@
+# Exclude other projects and heavy folders from Vercel build context
+portfolio-website/
+.qodo/
+.vscode/
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+frontend/build/
