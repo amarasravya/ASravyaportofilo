@@ -1,0 +1,33 @@
+# Netlify configuration for React (CRA) frontend
+
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "build"
+
+# SPA routing: send all non-file requests to index.html
+[[redirects]]
+  from = "/index.html"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# OPTIONAL: API proxy once backend is deployed elsewhere
+# [[redirects]]
+#   from = "/api/*"
+#   to = "https://your-backend-domain.example.com/api/:splat"
+#   status = 200
+#   force = true
+
+# Example security headers (optional)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
